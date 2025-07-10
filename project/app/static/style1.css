@@ -1,0 +1,114 @@
+/* Importing a clean, modern Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root {
+  --primary-color: #4f46e5;
+  --secondary-color: #f9fafb;
+  --text-color: #111827;
+  --muted-color: #6b7280;
+  --bg-color: #ffffff;
+  --card-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  --border-radius: 10px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  padding: 1.5rem;
+}
+
+/* ---------- NAVIGATION ---------- */
+nav {
+  background-color: var(--bg-color);
+  padding: 1rem 2rem;
+  border-radius: var(--border-radius);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 2rem;
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--primary-color);
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+nav a:hover {
+  color: #1e3a8a;
+}
+
+/* ---------- HEADINGS ---------- */
+h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: var(--primary-color);
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ---------- PROFILE CONTAINER ---------- */
+.profile-container {
+  max-width: 700px;
+  margin: 0 auto;
+  background-color: var(--bg-color);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.profile-container ul {
+  list-style: none;
+}
+
+.profile-container li {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.profile-container strong {
+  color: var(--muted-color);
+}
+
+/* ---------- EDIT BUTTON ---------- */
+.profile-container a {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.7rem 1.5rem;
+  background-color: var(--primary-color);
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.profile-container a:hover {
+  background-color: #3730a3;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-container {
+    padding: 1.5rem;
+  }
+}

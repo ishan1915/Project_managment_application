@@ -11,3 +11,21 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Profle "
+    
+
+class Group(models.Model):
+    name=models.CharField(max_length=100)
+    members=models.ManyToManyField(User,related_name='user_groups')
+
+    def __str__(self):
+        return self.name
+    
+
+
+class Task(models.Model):
+    group=models.ForeignKey(Group,on_delete=models.CASCADE)
+    assigned_to=models.ForeignKey(User,on_delete=models.CASCADE)
+    title=models.CharField(max_length=200)
+    description=models.TextField()
+    deadline=models.DateField()
+    uploaded_file=models.FileField(upload_to='uploads/',blank=True,null=True)

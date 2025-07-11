@@ -66,7 +66,9 @@ def profile_edit(request):
         profile_form=ProfileForm(request.POST,instance=profile)
         if profile_form.is_valid():
             profile_form.save()
+            messages.success(request,"Sucessfully Edited")
             return redirect('dashboard')
+            
     else:
         profile_form=ProfileForm(instance=profile)
     
@@ -95,6 +97,7 @@ def admin_edit(request):
         profile_form=ProfileForm(request.POST,instance=profile)
         if profile_form.is_valid():
             profile_form.save()
+            messages.success(request,"Sucessfully Edited")
             return redirect('admin-dashboard')
     else:
         profile_form=ProfileForm(instance=profile)

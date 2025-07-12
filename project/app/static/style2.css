@@ -1,0 +1,139 @@
+/* Import a modern font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+/* Root theme variables */
+:root {
+  --primary-color: #4f46e5;
+  --secondary-color: #f9fafb;
+  --accent-color: #10b981;
+  --danger-color: #ef4444;
+  --text-color: #111827;
+  --muted-color: #6b7280;
+  --bg-color: #ffffff;
+  --card-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  --border-radius: 10px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  padding: 2rem;
+  line-height: 1.6;
+}
+
+/* Navigation bar */
+nav {
+  margin-bottom: 2rem;
+}
+
+nav a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  background-color: var(--bg-color);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  transition: background-color 0.3s ease;
+}
+
+nav a:hover {
+  background-color: #e0e7ff;
+}
+
+/* Headings */
+h2 {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+h3 {
+  font-size: 1.4rem;
+  color: var(--text-color);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Member List */
+ul {
+  list-style: none;
+  background: var(--bg-color);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 2rem;
+}
+
+ul li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+}
+
+ul li:last-child {
+  border-bottom: none;
+}
+
+/* Task List */
+hr {
+  margin: 2rem 0 1rem;
+  border: 0;
+  border-top: 1px solid #d1d5db;
+}
+
+.task {
+  background-color: var(--bg-color);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 2rem;
+}
+
+.task strong {
+  color: var(--muted-color);
+  display: inline-block;
+  width: 140px;
+}
+
+.task a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.task a:hover {
+  text-decoration: underline;
+}
+
+.status {
+  font-weight: bold;
+}
+
+.status.completed {
+  color: var(--accent-color);
+}
+
+.status.pending {
+  color: var(--danger-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+
+  .task strong {
+    width: 100%;
+    margin-bottom: 0.3rem;
+  }
+}

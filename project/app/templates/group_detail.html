@@ -1,0 +1,42 @@
+{% load static%}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Group Detail</title>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="stylesheet" href="{% static 'style2.css' %}">
+</head>
+<body>
+    <nav>
+        <a href="/admin-dashboard/">← Back to Admin Dashboard</a>
+    </nav>
+
+    <h2>Group: {{ group.name }}</h2>
+
+    <h3>Members:</h3>
+    <ul>
+        {% for member in group.members.all %}
+            <li>{{ member.username }} ({{ member.email }})</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Assigned Tasks:</h3>
+    {% for task in tasks %}
+        <hr>
+        <strong>Task Title:</strong> {{ task.title }}<br>
+        <strong>Assigned To:</strong> {{ task.assigned_to.username }}<br>
+        <strong>Description:</strong> {{ task.description }}<br>
+        <strong>Deadline:</strong> {{ task.deadline }}<br>
+        <strong>Status:</strong> {% if task.is_completed %}✅ Completed{% else %}❌ Pending{% endif %}<br>
+        {% if task.uploaded_file %}
+            <strong>User File:</strong> <a href="{{ task.uploaded_file.url }}" download>Download</a><br>
+        {% endif %}
+        {% if task.user_description %}
+            <strong>User Description:</strong> {{ task.user_description }}<br>
+        {% endif %}
+    {% empty %}
+        <p>No tasks assigned to this group yet.</p>
+    {% endfor %}
+</body>
+</html>

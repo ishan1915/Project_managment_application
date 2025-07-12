@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Submit Work</title></head>
+<body>
+    <nav><a href="/dashboard/">Back to Dashboard</a></nav>
+    <h2>Upload Work</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

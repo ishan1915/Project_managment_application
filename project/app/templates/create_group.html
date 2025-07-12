@@ -1,0 +1,38 @@
+{% load static%}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Group</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+
+    <script>
+        function addMemberField() {
+            const container = document.getElementById("member-container");
+            const input = document.createElement("input");
+            input.type = "email";
+            input.name = "member_email";
+            input.required = true;
+            input.placeholder = "Enter member email";
+            container.appendChild(input);
+            container.appendChild(document.createElement("br"));
+        }
+    </script>
+</head>
+<body>
+    <nav><a href="/admin-dashboard/">Admin Dashboard</a></nav>
+    <h2>Create Group</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <h3>Group Members</h3>
+        <div id="member-container">
+            <input type="email" name="member_email" placeholder="Enter member email" required><br>
+        </div>
+        <button type="button" onclick="addMemberField()">+ Add Member</button><br><br>
+
+        <button type="submit">Create Group</button>
+    </form>
+</body>
+</html>

@@ -32,6 +32,20 @@
        
     </div>
 
+    <h3>My Tasks</h3>
+    {% for task in tasks %}
+        <hr>
+        <strong>{{ task.title }}</strong><br>
+        {{ task.description }}<br>
+        Deadline: {{ task.deadline }}<br>
+        Status: {% if task.is_completed %}✅ Completed{% else %}❌ Pending{% endif %}<br>
+        {% if not task.is_completed %}
+            <a href="/update-task/{{ task.id }}/">Submit Work</a>
+        {% endif %}
+    {% empty %}
+        No tasks assigned.
+    {% endfor %}
+
 </body>
 </html>
  

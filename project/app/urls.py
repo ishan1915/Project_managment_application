@@ -10,4 +10,14 @@ urlpatterns=[
 
      path('admin-dashboard/',admin_dashboard,name='admin-dashboard'),
      path('admin_edit/',admin_edit,name='admin_edit'),
+     path('create_group/',create_group_view,name='create_group'),
+     path('assign_task/',assign_task_view,name='assign_task'),
+
+     path('get-group-members/<int:group_id>/', get_group_members, name='get_group_members'),
+
+
+     path('update-task/<int:task_id>/',update_task_view,name='update-task'),
+
+     path('group/<int:group_id>/', group_detail_view, name='group_detail'),
+
 ]

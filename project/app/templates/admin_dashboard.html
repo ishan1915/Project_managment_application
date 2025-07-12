@@ -13,6 +13,8 @@
         <a href="/login/">Login</a>
         <a href="/signup/">Signup</a>
         <a href="/logout/">Logout</a>
+        <a href="/create_group/">Create Group</a>
+        <a href="/assign_task/">Assign Task</a>
     </nav>
 
     <h2>Welcome, {{ request.user.username }}</h2>
@@ -31,7 +33,27 @@
         </ul>
        
     </div>
+    <div class="group-section">
+        <h3>All Groups</h3>
+        {% for group in groups %}
+       <p>
+        <strong><a href="{% url 'group_detail' group.id %}">{{ group.name }}</a></strong>
+        - Members: {{ group.members.all|join:", " }}
+       </p>
+       {% endfor %}
 
+
+
+    </div>
+
+
+    <div class="task-section">
+        <h3>All Tasks</h3>
+        {% for task in tasks %}
+        <h4>{{task.group}}</h4>
+        <p><strong>{{task.title}}  </strong> - {{task.assigned_to.username}} {{task.deadline}}</p>
+        {% endfor %}
+    </div>
 </body>
 </html>
  

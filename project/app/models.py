@@ -29,3 +29,8 @@ class Task(models.Model):
     description=models.TextField()
     deadline=models.DateField()
     uploaded_file=models.FileField(upload_to='uploads/',blank=True,null=True)
+    user_description=models.TextField(blank=True,null=True)
+    is_completed=models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.title} - {self.assigned_to.username}"

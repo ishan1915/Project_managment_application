@@ -1,0 +1,47 @@
+{%load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assign Task</title>
+        <link rel="stylesheet" href="{% static 'style.css' %}">
+
+    <script>
+        function fetchGroupMembers(groupId) {
+            fetch(`/get-group-members/${groupId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const assignedToSelect = document.getElementById("id_assigned_to");
+                    assignedToSelect.innerHTML = "";  // Clear old options
+
+                    data.members.forEach(member => {
+                        const option = document.createElement("option");
+                        option.value = member.id;
+                        option.textContent = member.username;
+                        assignedToSelect.appendChild(option);
+                    });
+                });
+        }
+
+        window.onload = function () {
+            const groupSelect = document.getElementById("id_group");
+            groupSelect.addEventListener("change", function () {
+                const groupId = this.value;
+                if (groupId) {
+                    fetchGroupMembers(groupId);
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+    <nav><a href="/admin-dashboard/">Admin Dashboard</a></nav>
+    <h2>Assign Task to Group Member</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Assign</button>
+    </form>
+</body>
+</html>

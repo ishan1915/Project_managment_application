@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render,redirect
 
-from .forms import SignupForm
+from .forms import SignupForm,AddMemberForm
 from django.contrib.auth import login,authenticate
 from .models import Profile,Group,Task
 from .forms import ProfileForm,LoginForm,GroupForm,TaskAssignForm,TaskUpdateForm
@@ -182,3 +182,29 @@ def group_detail_view(request, group_id):
         'group': group,
         'tasks': tasks
     })
+
+def add_member_view(request,group_id):
+    group=get_object_or_404(Group,id=group_id)
+    message=''
+
+    if request.method=='POST':
+        form=AddMemberForm(request.POST)
+        if form.is_valid():
+            email=form.cleaned_data['email']
+            try:
+                user=User.objects.get(email=email)
+                if user in group.members.all():
+                    message='User is already a member of the group '
+                else:
+                    group.members.add(user)
+                    message=f"{user.username} added to group"
+            except User.DoesNotExist:
+                message='No user found with that email.'
+    else:
+        form=AddMemberForm()
+    return render(request,'add_group_member.html',{
+        'form':form,
+        'group':group,
+        'message':message
+    })
+    

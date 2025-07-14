@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Add Group Member</title></head>
+<body>
+    <nav>
+        <a href="{% url 'group_detail' group.id %}">← Back to {{ group.name }}</a>
+    </nav>
+
+    <h2>Add Member to Group: {{ group.name }}</h2>
+
+    {% if message %}
+        <p><strong>{{ message }}</strong></p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Member</button>
+    </form>
+</body>
+</html>

@@ -29,14 +29,18 @@ class GroupForm(forms.ModelForm):
 
 
 
+class AddMemberForm(forms.Form):
+    email=forms.EmailField(label='User Email',help_text='Enter email of registered user')
+
+
 class TaskAssignForm(forms.ModelForm):
     class  Meta:
         model=Task
         fields=['group','assigned_to','title','description','deadline']
         widgets = {
             'deadline': forms.DateInput(attrs={
-                'type': 'date',   # ✅ HTML5 calendar input
-                'class': 'form-control',  # optional Bootstrap class
+                'type': 'date',   
+                'class': 'form-control',  
             }),
         }
 

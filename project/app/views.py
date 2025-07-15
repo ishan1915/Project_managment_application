@@ -1,10 +1,13 @@
+from django.db.models import Q
+from datetime import timedelta
+from django.utils import timezone
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render,redirect
 
 from .forms import SignupForm,AddMemberForm
 from django.contrib.auth import login,authenticate
 from .models import Profile,Group,Task
-from .forms import ProfileForm,LoginForm,GroupForm,TaskAssignForm,TaskUpdateForm
+from .forms import ProfileForm,LoginForm,GroupForm,TaskAssignForm,TaskUpdateForm,TaskStatusForm
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import user_passes_test,login_required
 from django.contrib.auth import logout
@@ -53,8 +56,40 @@ def custom_logout_view(request):
 def dashboard_view(request):
      
     profile, created = Profile.objects.get_or_create(user=request.user)
-    tasks=Task.objects.filter(assigned_to=request.user)
-    return render(request,'dashboard.html',{ 'profile_detail':profile,'tasks':tasks})
+    tasks=Task.objects.filter(assigned_to=request.user).select_related('group')
+    
+    group_id=request.GET.get('group')
+    is_completed=request.GET.get('completed')
+    due=request.GET.get('due')
+    search=request.GET.get('search')
+
+    if group_id:
+        tasks=tasks.filter(group_id=group_id)
+
+
+    if is_completed=='yes':
+        tasks=tasks.filter(is_completed=True)
+    elif is_completed=='no':
+        tasks=tasks.filter(is_completed=False)
+
+    if due=='today':
+        today=timezone.now().date()
+        tasks=tasks.filter(deadline=today)
+    elif due=='this_week':
+        today=timezone.now().date()
+        week_end=today+timedelta(days=7)
+        tasks=tasks.filter(deadline__range=[today,week_end])
+
+
+
+    groups=Group.objects.filter(members=request.user)
+
+
+    return render(request,'dashboard.html',{ 'profile_detail':profile,'tasks':tasks,'filter_values':{
+        'group':group_id,
+        'completed':is_completed,
+         'due':due,
+            'search':search   }})
 
 
 
@@ -207,4 +242,19 @@ def add_member_view(request,group_id):
         'group':group,
         'message':message
     })
+    
+def admin_task_status(request,task_id):
+    task=get_object_or_404(Task,id=task_id)
+
+    if request.method=='POST':
+        form=TaskStatusForm(request.POST,instance=task)
+        if form.is_valid():
+            form.save()
+            return redirect('group_detail',group_id=task.group.id)
+    else:
+        form=TaskStatusForm(instance=task)
+    return render(request,'task_status.html',{'form':form,
+                                      'task':task}) 
+
+
     

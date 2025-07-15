@@ -21,6 +21,7 @@ urlpatterns=[
      path('group/<int:group_id>/', group_detail_view, name='group_detail'),
 
      path('group/<int:group_id>/add-member/', add_member_view, name='add_group_member'),
-
+    
+    path('task_status<int:task_id>/',admin_task_status,name='admin_task_status'),
 
 ]

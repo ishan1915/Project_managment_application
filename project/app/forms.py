@@ -54,3 +54,8 @@ class TaskUpdateForm(forms.ModelForm):
         model=Task
         fields=['uploaded_file','user_description']
  
+
+class TaskStatusForm(forms.ModelForm):
+    class Meta:
+        model=Task
+        fields=['is_completed']

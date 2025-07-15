@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Update Task Status</title></head>
+<body>
+    <nav><a href="{% url 'group_detail' task.group.id %}">← Back to Group</a></nav>
+    <h2>Update Status for Task: {{ task.title }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Update Status</button>
+    </form>
+</body>
+</html>

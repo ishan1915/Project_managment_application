@@ -32,6 +32,41 @@
        
     </div>
 
+
+    <h2>Your Tasks</h2>
+
+<form method="get">
+    <label>Group:</label>
+    <select name="group">
+        <option value="">-- All --</option>
+        {% for group in groups %}
+            <option value="{{ group.id }}" {% if filter_values.group == group.id|stringformat:"s" %}selected{% endif %}>
+                {{ group.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Status:</label>
+    <select name="completed">
+        <option value="">-- All --</option>
+        <option value="no" {% if filter_values.completed == 'no' %}selected{% endif %}>Incomplete</option>
+        <option value="yes" {% if filter_values.completed == 'yes' %}selected{% endif %}>Completed</option>
+    </select>
+
+    <label>Deadline:</label>
+    <select name="due">
+        <option value="">-- All --</option>
+        <option value="today" {% if filter_values.due == 'today' %}selected{% endif %}>Today</option>
+        <option value="this_week" {% if filter_values.due == 'this_week' %}selected{% endif %}>This Week</option>
+    </select>
+
+    <input type="text" name="search" placeholder="Search title or description"
+           value="{{ filter_values.search|default_if_none:'' }}" />
+
+    <button type="submit">Apply</button>
+</form>
+
+     
     <h3>My Tasks</h3>
     {% for task in tasks %}
         <hr>

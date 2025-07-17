@@ -34,3 +34,14 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.assigned_to.username}"
+    
+
+
+
+class ChatQuestion(models.Model):
+    question=models.CharField(max_length=300)
+    answer=models.TextField()
+    link=models.URLField(blank=True,null=True)
+
+    def __str__(self):
+        return self.question

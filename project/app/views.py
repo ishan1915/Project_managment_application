@@ -3,10 +3,9 @@ from datetime import timedelta
 from django.utils import timezone
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render,redirect
-
 from .forms import SignupForm,AddMemberForm
 from django.contrib.auth import login,authenticate
-from .models import Profile,Group,Task
+from .models import Profile,Group,Task,ChatQuestion
 from .forms import ProfileForm,LoginForm,GroupForm,TaskAssignForm,TaskUpdateForm,TaskStatusForm
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import user_passes_test,login_required
@@ -57,7 +56,8 @@ def dashboard_view(request):
      
     profile, created = Profile.objects.get_or_create(user=request.user)
     tasks=Task.objects.filter(assigned_to=request.user).select_related('group')
-    
+    question=ChatQuestion.objects.all()
+
     group_id=request.GET.get('group')
     is_completed=request.GET.get('completed')
     due=request.GET.get('due')
@@ -85,7 +85,7 @@ def dashboard_view(request):
     groups=Group.objects.filter(members=request.user)
 
 
-    return render(request,'dashboard.html',{ 'profile_detail':profile,'tasks':tasks,'filter_values':{
+    return render(request,'dashboard.html',{ 'profile_detail':profile,'tasks':tasks,'groups':groups,'questions':question,'filter_values':{
         'group':group_id,
         'completed':is_completed,
          'due':due,
@@ -257,4 +257,4 @@ def admin_task_status(request,task_id):
                                       'task':task}) 
 
 
-    
+

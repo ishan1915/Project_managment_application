@@ -15,6 +15,8 @@
         <a href="/login/">Login</a>
         <a href="/signup/">Signup</a>
         <a href="/logout/">Logout</a>
+        <a href="{% url 'chat' %}">💬 Chat</a>
+
     </nav>
 
     <h2>Welcome, {{ request.user.username }}</h2>

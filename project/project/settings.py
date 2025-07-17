@@ -127,3 +127,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL='dashboard'
 LOGOUT_REDIRECT_URL='/user_login/'
 
+
+TIME_ZONE = 'Asia/Kolkata'
+USE_TZ = True  

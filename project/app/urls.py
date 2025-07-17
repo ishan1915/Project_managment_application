@@ -1,5 +1,7 @@
 from django.urls import path
 from .views import *
+from . import views
+
 urlpatterns=[
     path('signup/',signup_view,name='signup'),
     path('login/',user_login,name='user_login'),
@@ -23,5 +25,9 @@ urlpatterns=[
      path('group/<int:group_id>/add-member/', add_member_view, name='add_group_member'),
     
     path('task_status<int:task_id>/',admin_task_status,name='admin_task_status'),
+
+    path('chat/', chat_view, name='chat'),
+    path('send-message/', send_messages, name='send_message'),
+
 
 ]

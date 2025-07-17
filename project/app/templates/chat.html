@@ -1,0 +1,78 @@
+{% load static %}
+{% load tz %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Group Chat</title>
+    <style>
+        .chat-container { display: flex; height: 80vh; font-family: Arial; }
+        .user-list { width: 25%; border-right: 1px solid #ccc; padding: 15px; overflow-y: auto; }
+        .chat-box { width: 75%; padding: 15px; display: flex; flex-direction: column; }
+        .messages { flex-grow: 1; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
+        .message-input { display: flex; }
+        .message-input input { flex: 1; padding: 10px; }
+        .message-input button { padding: 10px; background: #3498db; color: white; border: none; }
+        .msg { margin: 5px 0; }
+        .msg.you { text-align: right; color: green; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="user-list">
+        <h4>Group Members</h4>
+        {% for user in group_members %}
+            <p><a href="?user={{ user.id }}">{{ user.username }}</a></p>
+        {% endfor %}
+    </div>
+
+    <div class="chat-box">
+        {% if selected_user %}
+            <h4>Chat with {{ selected_user.username }}</h4>
+            <div class="messages" id="chat-box">
+                {% for msg in messages %}
+                    <div class="msg {% if msg.sender == request.user %}you{% endif %}">
+                        <strong>{{ msg.sender.username }}</strong>: {{ msg.content }} <br><small>{{ msg.timestamp|localtime|date:"d M Y, h:i A" }}</small>
+
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="message-input">
+                <input type="text" id="message-input" placeholder="Type your message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        {% else %}
+            <p>Select a user to start chatting</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function sendMessage() {
+    const content = document.getElementById("message-input").value;
+    if (!content.trim()) return;
+
+    fetch("{% url 'send_message' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `receiver_id={{ selected_user.id }}&content=${encodeURIComponent(content)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML += `
+            <div class="msg you"><strong>You</strong>: ${data.message} <br><small>${data.timestamp}</small></div>
+        `;
+        document.getElementById("message-input").value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+</script>
+
+</body>
+</html>

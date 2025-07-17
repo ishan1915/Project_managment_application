@@ -2,10 +2,11 @@ from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, render,redirect
 from .forms import SignupForm,AddMemberForm
 from django.contrib.auth import login,authenticate
-from .models import Profile,Group,Task,ChatQuestion
+from .models import Profile,Group,Task,ChatQuestion,Message
 from .forms import ProfileForm,LoginForm,GroupForm,TaskAssignForm,TaskUpdateForm,TaskStatusForm
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import user_passes_test,login_required
@@ -258,3 +259,26 @@ def admin_task_status(request,task_id):
 
 
 
+def chat_view(request):
+    user_groups=Group.objects.filter(members=request.user)
+    group_members=User.objects.filter(user_groups__in=user_groups).exclude(id=request.user.id).distinct()
+    selected_user_id=request.GET.get("user")
+    selected_user=None
+    messages=[]
+
+    if selected_user_id:
+        selected_user=get_object_or_404(User,id=selected_user_id)
+        messages=Message.objects.filter(sender__in=[request.user,selected_user],
+                                        receiver__in=[request.user,selected_user]).order_by("timestamp")
+        
+    return render(request,"chat.html",{"group_members":group_members,'messages':messages,'selected_user':selected_user})
+
+
+@csrf_exempt
+def send_messages(request):
+    if request.method=='POST':
+        receiver_id=request.POST.get("receiver_id")
+        content=request.POST.get("content")
+        receiver=get_object_or_404(User,id=receiver_id)
+        msg=Message.objects.create(sender=request.user,receiver=receiver, content=content)
+        return JsonResponse({"status": "sent", "message": msg.content, "timestamp": msg.timestamp.strftime('%H:%M')})

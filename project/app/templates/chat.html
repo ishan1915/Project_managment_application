@@ -41,6 +41,8 @@
 
             <div class="message-input">
                 <input type="text" id="message-input" placeholder="Type your message...">
+                <button id="emoji-btn">😀</button>
+
                 <button onclick="sendMessage()">Send</button>
             </div>
         {% else %}
@@ -72,7 +74,32 @@ function sendMessage() {
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
+
+
+
+
 </script>
+
+
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
+<emoji-picker id="emoji-picker" style="display:none; position:absolute; bottom:60px; right:10px;"></emoji-picker>
+
+<script>
+const emojiPicker = document.getElementById("emoji-picker");
+const input = document.getElementById("message-input");
+
+document.getElementById("emoji-btn").addEventListener("click", () => {
+    emojiPicker.style.display = emojiPicker.style.display === "none" ? "block" : "none";
+});
+
+emojiPicker.addEventListener('emoji-click', event => {
+    input.value += event.detail.unicode;
+    emojiPicker.style.display = 'none';
+});
+</script>
+
+
 
 </body>
 </html>

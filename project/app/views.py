@@ -1,4 +1,302 @@
-from django.db.models import Q
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import status
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+from .models import Profile, Group, Task, Message
+from .serializers import (
+    SignupSerializer, ProfileSerializer, GroupSerializer,
+    TaskSerializer, TaskDetailSerializer, UserSerializer, MessageSerializer, GroupCreateSerializer
+)
+from datetime import timedelta
+from django.utils import timezone
+from rest_framework.parsers import MultiPartParser, FormParser
+
+
+class SignupAPI(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = SignupSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({"message": "User created successfully."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginAPI(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return Response({"message": "Logged in", "is_staff": user.is_staff})
+        return Response({"error": "Invalid credentials"}, status=400)
+
+
+class LogoutAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        logout(request)
+        return Response({"message": "Logged out"})
+
+
+class DashboardAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        tasks = Task.objects.filter(assigned_to=request.user)
+        group_id = request.GET.get('group')
+        completed = request.GET.get('completed')
+        due = request.GET.get('due')
+        search = request.GET.get('search')
+
+        if group_id:
+            tasks = tasks.filter(group_id=group_id)
+        if completed == 'yes':
+            tasks = tasks.filter(is_completed=True)
+        elif completed == 'no':
+            tasks = tasks.filter(is_completed=False)
+        if due == 'today':
+            today = timezone.now().date()
+            tasks = tasks.filter(deadline=today)
+        elif due == 'this_week':
+            today = timezone.now().date()
+            week_end = today + timedelta(days=7)
+            tasks = tasks.filter(deadline__range=(today, week_end))
+        if search:
+            tasks = tasks.filter(title__icontains=search) | tasks.filter(description__icontains=search)
+
+        groups = Group.objects.filter(members=request.user)
+        return Response({
+            'profile': ProfileSerializer(profile).data,
+            'tasks': TaskDetailSerializer(tasks, many=True).data,
+            'groups': GroupSerializer(groups, many=True).data
+        })
+
+
+class ProfileAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        return Response(ProfileSerializer(profile).data)
+
+    def put(self, request):
+        profile = get_object_or_404(Profile, user=request.user)
+        serializer = ProfileSerializer(profile, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+
+class AdminDashboardAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        groups = Group.objects.filter(members=request.user)
+        tasks = Task.objects.filter(group__in=groups)
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        return Response({
+            'groups': GroupSerializer(groups, many=True).data,
+            'tasks': TaskDetailSerializer(tasks, many=True).data,
+            'profile': ProfileSerializer(profile).data
+        })
+
+
+class CreateGroupAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        serializer = GroupCreateSerializer(data=request.data)
+        member_emails = request.data.get('member_emails', [])
+        if serializer.is_valid():
+            group = serializer.save()
+            for email in member_emails:
+                try:
+                    user = User.objects.get(email=email)
+                    group.members.add(user)
+                except User.DoesNotExist:
+                    continue
+            return Response(GroupSerializer(group).data)
+        return Response(serializer.errors, status=400)
+
+
+class GroupMembersAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, group_id):
+        group = get_object_or_404(Group, id=group_id)
+        members = group.members.all()
+        return Response(UserSerializer(members, many=True).data)
+
+
+class AssignTaskAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            assigned_to = serializer.validated_data.get('assigned_to')
+            group = serializer.validated_data.get('group')
+            if assigned_to not in group.members.all():
+                return Response({"error": "User not in group"}, status=400)
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+
+class UpdateTaskAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def put(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+
+class GroupDetailAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, group_id):
+        group = get_object_or_404(Group, id=group_id)
+        tasks = Task.objects.filter(group=group)
+        return Response({
+            "group": GroupSerializer(group).data,
+            "tasks": TaskDetailSerializer(tasks, many=True).data
+        })
+
+
+class AddGroupMemberAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, group_id):
+        group = get_object_or_404(Group, id=group_id)
+        email = request.data.get("email")
+        try:
+            user = User.objects.get(email=email)
+            if user in group.members.all():
+                return Response({"message": "User already in group"}, status=400)
+            group.members.add(user)
+            return Response({"message": f"{user.username} added to group"})
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+
+class AdminTaskStatusAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+
+class ChatListAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_groups = Group.objects.filter(members=request.user)
+        members = User.objects.filter(user_groups__in=user_groups).exclude(id=request.user.id).distinct()
+        return Response(UserSerializer(members, many=True).data)
+
+
+class ChatMessagesAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        other_user = get_object_or_404(User, id=user_id)
+        messages = Message.objects.filter(
+            sender__in=[request.user, other_user],
+            receiver__in=[request.user, other_user]
+        ).order_by("timestamp")
+        return Response(MessageSerializer(messages, many=True).data)
+
+
+class SendMessageAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        receiver_id = request.data.get("receiver_id")
+        content = request.data.get("content")
+        receiver = get_object_or_404(User, id=receiver_id)
+        msg = Message.objects.create(sender=request.user, receiver=receiver, content=content)
+        return Response({"status": "sent", "message": msg.content, "timestamp": msg.timestamp})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
 from django.http import JsonResponse
@@ -282,3 +580,4 @@ def send_messages(request):
         receiver=get_object_or_404(User,id=receiver_id)
         msg=Message.objects.create(sender=request.user,receiver=receiver, content=content)
         return JsonResponse({"status": "sent", "message": msg.content, "timestamp": msg.timestamp.strftime('%H:%M')})
+'''

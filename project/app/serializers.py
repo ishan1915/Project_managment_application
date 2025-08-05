@@ -28,6 +28,11 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = '__all__'
 
+class MyGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Group
+        fields=['id','name']
+
 class GroupCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
@@ -36,7 +41,17 @@ class GroupCreateSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ['group','assigned_to','title','description','deadline']
+
+class TaskSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Task
+        fields=['uploaded_file','user_description']
+
+class TaskMarkComplete(serializers.ModelSerializer):
+    class Meta:
+        model=Task
+        fields=['is_completed']
 
 class TaskDetailSerializer(serializers.ModelSerializer):
     group = GroupSerializer()

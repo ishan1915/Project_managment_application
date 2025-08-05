@@ -7,12 +7,14 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from .models import Profile, Group, Task, Message
 from .serializers import (
-    SignupSerializer, ProfileSerializer, GroupSerializer,
-    TaskSerializer, TaskDetailSerializer, UserSerializer, MessageSerializer, GroupCreateSerializer
+    MyGroupSerializer, SignupSerializer, ProfileSerializer, GroupSerializer, TaskMarkComplete,
+    TaskSerializer, TaskDetailSerializer, TaskSubmissionSerializer, UserSerializer, MessageSerializer, GroupCreateSerializer
 )
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 
 class SignupAPI(APIView):
@@ -25,7 +27,7 @@ class SignupAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginAPI(APIView):
+"""class LoginAPI(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
         username = request.data.get("username")
@@ -34,7 +36,38 @@ class LoginAPI(APIView):
         if user:
             login(request, user)
             return Response({"message": "Logged in", "is_staff": user.is_staff})
+        return Response({"error": "Invalid credentials"}, status=400)"""
+
+
+
+class LoginAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(request, username=username, password=password)
+        
+        if user:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "is_staff": user.is_staff
+            })
         return Response({"error": "Invalid credentials"}, status=400)
+    
+class AdminLogin(APIView):
+    permission_classes=[AllowAny]
+    def post(self,request):
+        username=request.data.get('username')
+        password=request.data.get('password')
+        user=authenticate(request,username=username,password=password)
+        if user:
+            login(request,user)
+            return Response({"message":"Admin Logged in"})
+        return Response({"error":"invalid credential"},status=400)
+
 
 
 class LogoutAPI(APIView):
@@ -48,6 +81,7 @@ class DashboardAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        user=request.user
         profile, created = Profile.objects.get_or_create(user=request.user)
         tasks = Task.objects.filter(assigned_to=request.user)
         group_id = request.GET.get('group')
@@ -73,6 +107,7 @@ class DashboardAPI(APIView):
 
         groups = Group.objects.filter(members=request.user)
         return Response({
+            "username":user.username,
             'profile': ProfileSerializer(profile).data,
             'tasks': TaskDetailSerializer(tasks, many=True).data,
             'groups': GroupSerializer(groups, many=True).data
@@ -98,11 +133,11 @@ class AdminDashboardAPI(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         groups = Group.objects.filter(members=request.user)
-        tasks = Task.objects.filter(group__in=groups)
+        #tasks = Task.objects.filter(group__in=groups)
         profile, _ = Profile.objects.get_or_create(user=request.user)
         return Response({
             'groups': GroupSerializer(groups, many=True).data,
-            'tasks': TaskDetailSerializer(tasks, many=True).data,
+            #'tasks': TaskDetailSerializer(tasks, many=True).data,
             'profile': ProfileSerializer(profile).data
         })
 
@@ -123,6 +158,12 @@ class CreateGroupAPI(APIView):
             return Response(GroupSerializer(group).data)
         return Response(serializer.errors, status=400)
 
+class MyGroupAPI(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        user=request.user
+        group=Group.objects.filter(members=user)
+        return Response(MyGroupSerializer(group,many=True).data)
 
 class GroupMembersAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -147,16 +188,27 @@ class AssignTaskAPI(APIView):
 
 
 class UpdateTaskAPI(APIView):
-    permission_classes = [IsAuthenticated]
+    
     parser_classes = [MultiPartParser, FormParser]
 
-    def put(self, request, task_id):
+    def post(self, request, task_id):
         task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
-        serializer = TaskSerializer(task, data=request.data, partial=True)
+        serializer = TaskSubmissionSerializer(task, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
+
+class MarkCompleteTask(APIView):
+    def post(self,request,task_id):
+        task=get_object_or_404(Task,id=task_id)
+        serializer=TaskMarkComplete(task,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors,status=400)
+    
+
 
 
 class GroupDetailAPI(APIView):
@@ -187,17 +239,7 @@ class AddGroupMemberAPI(APIView):
             return Response({"error": "User not found"}, status=404)
 
 
-class AdminTaskStatusAPI(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request, task_id):
-        task = get_object_or_404(Task, id=task_id)
-        serializer = TaskSerializer(task, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
-
+ 
 
 class ChatListAPI(APIView):
     permission_classes = [IsAuthenticated]
